@@ -40,7 +40,7 @@ app.get('/', (req, res) => {
 // Route: generate PDF & save to folder
 app.get('/generate-pdf', async (req, res) => {
   try {
-    const { username = 'John Doe', amount = '$1000' } = req.query;
+    const { username = 'John Doe', amount = '$1200' } = req.query;
 
     // Ensure reports folder exists
     const reportsDir = path.join(__dirname, 'reports');
