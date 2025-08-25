@@ -4,6 +4,7 @@ const {
   getCorporateNameData,
   getMonths,
   getCorporateData,
+  getCorporateDataByParams,
 } = require('../controller/getCorporate');
 const router = express.Router();
 
@@ -15,5 +16,6 @@ router.get('/factories', getFactoryNames);
 router.get('/months', getMonths);
 
 router.get('/corporate-data', getCorporateData);
+router.get('/corporate-data-params', getCorporateDataByParams);
 
 module.exports = router;

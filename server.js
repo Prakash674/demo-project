@@ -12,6 +12,7 @@ app.use(express.json());
 
 app.use('/api', corporateRoutes);
 
+
 async function generateDynamicPdf(data, outputPath) {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
@@ -29,18 +30,13 @@ async function generateDynamicPdf(data, outputPath) {
   await page.pdf({
     path: outputPath,
     format: 'A4',
+    landscape: true,
     printBackground: true,
   });
 
   await browser.close();
   return outputPath;
 }
-
-app.get('/', (req, res) => {
-  res.send(
-    'Welcome to the PDF Generator API! Use /generate-pdf to create a PDF.'
-  );
-});
 
 // Route: generate PDF & save to folder
 app.get('/generate-pdf', async (req, res) => {
@@ -66,6 +62,12 @@ app.get('/generate-pdf', async (req, res) => {
     console.error('Error generating PDF:', err);
     res.status(500).send('Failed to generate PDF');
   }
+});
+
+app.get('/', (req, res) => {
+  res.send(
+    'Welcome to the PDF Generator API! Use /generate-pdf to create a PDF.'
+  );
 });
 
 // Serve reports as static files

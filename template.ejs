@@ -1,122 +1,366 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Invoice</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Wages Count</title>
     <style>
-      body {
-        font-family: 'Arial', sans-serif;
-        margin: 40px;
-        color: #333;
-      }
-      .invoice-box {
-        max-width: 800px;
-        margin: auto;
-        border: 1px solid #eee;
-        padding: 30px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
-      }
-      h1 {
-        text-align: center;
-        color: #2c3e50;
-        margin-bottom: 20px;
-      }
       table {
-        width: 100%;
-        line-height: 24px;
-        text-align: left;
         border-collapse: collapse;
+        width: 100%;
+        /* border: 1px solid #000000; */
+        /* table-layout: fixed; */
       }
-      table td {
-        padding: 8px;
-        vertical-align: top;
+
+      th,
+      td {
+        /* border: 1px solid #000000; */
+        color: #000;
+        /* text-align: left; */
+        font-size: 10px;
       }
-      table tr.heading td {
-        background: #f2f2f2;
-        border-bottom: 1px solid #ddd;
-        font-weight: bold;
-      }
-      table tr.item td {
-        border-bottom: 1px solid #f9f9f9;
-      }
-      table tr.total td {
-        border-top: 2px solid #eee;
-        font-weight: bold;
-      }
-      .footer {
-        margin-top: 30px;
+
+      th {
+        background-color: #ffffff;
+        font-weight: 500;
+        font-size: 10px;
         text-align: center;
-        font-size: 12px;
-        color: #777;
+        border: 1px solid #000000;
+        border-left: 0px solid #000000;
       }
     </style>
   </head>
   <body>
-    <div class="invoice-box">
-      <h1>Invoice</h1>
-
-      <table>
+    <table style="border: 1px solid #000000">
+      <thead>
         <tr>
-          <td>
-            <strong>From:</strong><br />
-            My Company Pvt Ltd<br />
-            123 Business Street<br />
-            City, Country
-          </td>
-          <td style="text-align: right">
-            <strong>Invoice #:</strong> INV-<%= Date.now() %><br />
-            <strong>Date:</strong> <%= new Date().toLocaleDateString() %><br />
-            <strong>Due:</strong> 7 days
-          </td>
+          <th>Month Day</th>
+          <th>Rate</th>
+          <th>Payable</th>
+          <th>Deduction</th>
+          <th>Wages</th>
+          <th>Employer Part</th>
         </tr>
-      </table>
-
-      <br />
-
-      <table>
+      </thead>
+      <tbody>
+        <!-- ================= STRUCTURE (first TR only) ================= -->
         <tr>
-          <td>
-            <strong>Bill To:</strong><br />
-            <%= username %><br />
-            prakash@example.com
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>S.No.</td>
+                <td>Employee Name</td>
+                <td>Arr Day</td>
+                <td>PD</td>
+              </tr>
+              <tr>
+                <td>Peer No.</td>
+                <td>Father Name</td>
+                <td>OTH</td>
+                <td>WO</td>
+              </tr>
+              <tr>
+                <td>DOJ</td>
+                <td>Location</td>
+                <td>M/F</td>
+                <td>PR</td>
+              </tr>
+              <tr>
+                <td>Department</td>
+                <td>UAN</td>
+                <td>AADHAR</td>
+                <td>AB</td>
+              </tr>
+              <tr>
+                <td>EPF NO.</td>
+                <td>EMP.NO</td>
+                <td>ESI NO.</td>
+                <td>LV</td>
+              </tr>
+              <tr>
+                <td colspan="4">Designation</td>
+              </tr>
+            </table>
+          </td>
+
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>Basic</td>
+              </tr>
+              <tr>
+                <td>HRA</td>
+              </tr>
+              <tr>
+                <td>Other</td>
+              </tr>
+              <tr>
+                <td>Att Once</td>
+              </tr>
+              <tr>
+                <td style="text-align: right; font-weight: bold">Gross</td>
+              </tr>
+            </table>
+          </td>
+
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>Basic</td>
+                <td style="text-align: right">Arrear</td>
+              </tr>
+              <tr>
+                <td>HRA</td>
+                <td style="text-align: right">Overtime</td>
+              </tr>
+              <tr>
+                <td>Other</td>
+              </tr>
+              <tr>
+                <td>Att Once</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align: right; font-weight: bold">
+                  Payable
+                </td>
+              </tr>
+            </table>
+          </td>
+
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>Canteen</td>
+                <td style="text-align: right">PF</td>
+              </tr>
+              <tr>
+                <td colspan="2" align="right">ESI</td>
+              </tr>
+              <tr>
+                <td colspan="2" align="right">LWF</td>
+              </tr>
+              <tr>
+                <td
+                  colspan="2"
+                  style="
+                    text-align: right;
+                    font-weight: bold;
+                    padding-top: 11px;
+                  ">
+                  Deduction
+                </td>
+              </tr>
+            </table>
+          </td>
+
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td align="right">PF</td>
+              </tr>
+              <tr>
+                <td align="right">Pension</td>
+              </tr>
+              <tr>
+                <td align="right">ESI</td>
+              </tr>
+              <tr>
+                <td align="right">LWF</td>
+              </tr>
+            </table>
+          </td>
+
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>Payment Mode</td>
+              </tr>
+              <tr>
+                <td>Pension</td>
+                <td align="right">EPF</td>
+              </tr>
+              <tr>
+                <td>ER-ESI</td>
+                <td align="right">Fine</td>
+              </tr>
+              <tr>
+                <td>ER-LWF</td>
+                <td align="right">Damage</td>
+              </tr>
+              <tr>
+                <td
+                  colspan="2"
+                  style="
+                    text-align: right;
+                    font-weight: bold;
+                    padding-top: 14px;
+                  ">
+                  Net Payable
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
-      </table>
 
-      <br />
+        <!-- ================= VALUES (repeatable TRs) ================= -->
+        <tr>
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>1.</td>
+                <td>VEER BAHADUR YADAV</td>
+                <td>0.0</td>
+                <td>30.0</td>
+              </tr>
+              <tr>
+                <td>HK0131</td>
+                <td>VED RAM YADAV</td>
+                <td>4.0</td>
+                <td>0.0</td>
+              </tr>
+              <tr>
+                <td>29-Dec-18</td>
+                <td>A-02</td>
+                <td>M</td>
+                <td>0.0</td>
+              </tr>
+              <tr>
+                <td>A-02</td>
+                <td>100980564568</td>
+                <td>681693866367</td>
+                <td>0.0</td>
+              </tr>
+              <tr>
+                <td>-</td>
+                <td>HK2462</td>
+                <td>6928759405</td>
+                <td>0.0</td>
+              </tr>
+              <tr>
+                <td colspan="4">-</td>
+              </tr>
+            </table>
+          </td>
 
-      <table>
-        <tr class="heading">
-          <td>Item</td>
-          <td>Qty</td>
-          <td>Price</td>
-          <td>Total</td>
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>12000.00</td>
+              </tr>
+              <tr>
+                <td>3000.00</td>
+              </tr>
+              <tr>
+                <td>6923.00</td>
+              </tr>
+              <tr>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td style="text-align: right; font-weight: bold">21923</td>
+              </tr>
+            </table>
+          </td>
+
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>12000.00</td>
+                <td style="text-align: right">Arrear</td>
+              </tr>
+              <tr>
+                <td>3000.00</td>
+                <td style="text-align: right">365</td>
+              </tr>
+              <tr>
+                <td>6923.00</td>
+              </tr>
+              <tr>
+                <td>Att Once</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align: right; font-weight: bold">
+                  22,288
+                </td>
+              </tr>
+            </table>
+          </td>
+
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>60</td>
+                <td style="text-align: right">1800</td>
+              </tr>
+              <tr>
+                <td colspan="2" align="right">168</td>
+              </tr>
+              <tr>
+                <td colspan="2" align="right">34.00</td>
+              </tr>
+              <tr>
+                <td
+                  colspan="2"
+                  style="
+                    text-align: right;
+                    font-weight: bold;
+                    padding-top: 11px;
+                  ">
+                  2062.00
+                </td>
+              </tr>
+            </table>
+          </td>
+
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td align="right">15000</td>
+              </tr>
+              <tr>
+                <td align="right">15000</td>
+              </tr>
+              <tr>
+                <td align="right">22,288</td>
+              </tr>
+              <tr>
+                <td align="right">21,923</td>
+              </tr>
+            </table>
+          </td>
+
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr>
+                <td>Cash</td>
+              </tr>
+              <tr>
+                <td>1000</td>
+                <td align="right">500</td>
+              </tr>
+              <tr>
+                <td>200</td>
+                <td align="right">50</td>
+              </tr>
+              <tr>
+                <td>300</td>
+                <td align="right">20</td>
+              </tr>
+              <tr>
+                <td
+                  colspan="2"
+                  style="
+                    text-align: right;
+                    font-weight: bold;
+                    padding-top: 14px;
+                  ">
+                  20,226
+                </td>
+              </tr>
+            </table>
+          </td>
         </tr>
-
-        <tr class="item">
-          <td>Website Development</td>
-          <td>1</td>
-          <td>$1000</td>
-          <td>$1000</td>
-        </tr>
-
-        <tr class="item">
-          <td>Hosting</td>
-          <td>1</td>
-          <td>$200</td>
-          <td>$200</td>
-        </tr>
-
-        <tr class="total">
-          <td colspan="3" style="text-align: right">Total:</td>
-          <td><%= amount %></td>
-        </tr>
-      </table>
-
-      <div class="footer">
-        Thank you for your business!
-        <br />This is a computer generated invoice.
-      </div>
-    </div>
+      </tbody>
+    </table>
   </body>
 </html>
