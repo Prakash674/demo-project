@@ -146,147 +146,342 @@ const getCorporateData = async (req, res) => {
 
 // const html = buildHtml(rows);
 
+function buildHeader(rows) {
+  if (!rows.length) return '';
+
+  const earnings = JSON.parse(rows[0].earning_details || '[]');
+  const deductions = JSON.parse(rows[0].deduction_details || '[]');
+  const inputs = JSON.parse(rows[0].input_details || '[]');
+  const fixed_input_details = JSON.parse(rows[0].fixed_input_details || '[]');
+  const expense_details = JSON.parse(rows[0].expense_details || '[]');
+
+  // Extract keys
+  const earningKeys = earnings.map((e) => e.title);
+  const deductionKeys = deductions.map((d) => d.title);
+  const inputKeys = inputs.map((i) => i.title);
+  const rateKeys = fixed_input_details.map((i) => i.title || '[]');
+  const expenseKeys = expense_details.map((e) => e.title || '[]');
+
+  const exclude = [
+    'factory_name',
+    'month',
+    'company_id',
+    'corporate_name',
+    'factory_id',
+    'gross_salary_structure',
+    'net_payable',
+    'input_details',
+    'esic_challan_details',
+    'expense_details',
+    'pf_esic_details',
+    'earning_details',
+    'deduction_details',
+    'fixed_input_details',
+    'month_details',
+    'pf_challan_details',
+    'salary',
+  ];
+
+  // Filter keys
+  const employeeKeys = Object.keys(rows[0]).filter(
+    (key) =>
+      typeof rows[0][key] !== 'object' &&
+      rows[0][key] !== null &&
+      !exclude.includes(key)
+  );
+  employeeKeys.unshift('S.no.');
+
+  let tableRows = '';
+
+  // maximum rows needed
+  const maxLen = Math.max(
+    Math.ceil(employeeKeys.length / 2),
+    Math.ceil(inputKeys.length / 2)
+  );
+
+  for (let i = 0; i < maxLen; i++) {
+    const empCols = employeeKeys.slice(i * 2, i * 2 + 2);
+    const inCols = inputKeys.slice(i * 2, i * 2 + 2);
+
+    let left =
+      empCols.length === 1
+        ? `<td colspan="2">${empCols[0]}</td>`
+        : empCols.map((c) => `<td>${c}</td>`).join('');
+
+    let right =
+      inCols.length === 1
+        ? `<td colspan="2">${inCols[0]}</td>`
+        : inCols.map((c) => `<td>${c}</td>`).join('');
+
+    tableRows += `<tr>${left}${right}</tr>`;
+  }
+
+  return `
+    <tr>
+      <!-- Column 1: Employee Info -->
+      <td style="border: 1px solid #000000">
+        <table>
+             ${tableRows}
+        </table>
+      </td>
+
+      <!-- Column 2: Rate -->
+      <td style="border: 1px solid #000000">
+        <table>
+          ${rateKeys.map((k) => `<tr><td>${k}</td></tr>`).join('')}
+          <tr><td style="text-align:right;font-weight:bold">Gross</td></tr>
+        </table>
+      </td>
+
+      <!-- Column 3: Payable -->
+     <td style="border: 1px solid #000000">
+  <table>
+    ${(() => {
+      let html = '';
+      for (let i = 0; i < earningKeys.length; i += 2) {
+        const k1 = earningKeys[i];
+        const k2 = earningKeys[i + 1]; // may be undefined
+
+        html += `<tr>
+                   <td>${k1 || ''}</td>
+                   <td>${k2 || ''}</td>
+                 </tr>`;
+      }
+      return html;
+    })()}
+    <tr><td colspan="2" style="text-align:right;font-weight:bold">Payable</td></tr>
+  </table>
+</td>
+
+
+      <!-- Column 4: Deduction -->
+      <td style="border: 1px solid #000000">
+        <table>
+          ${deductionKeys
+            .map((k) => `<tr><td colspan="2" align="right">${k}</td></tr>`)
+            .join('')}
+          <tr><td colspan="2" style="text-align:right;font-weight:bold">Deduction</td></tr>
+        </table>
+      </td>
+
+      <!-- Column 5: Wages -->
+      <td style="border: 1px solid #000000">
+        <table>
+          <tr><td align="right">${rows[0].pf_esic_details ? 'PF' : ''}</td></tr>
+            <tr><td align="right">${
+              rows[0].pf_esic_details ? 'ESIC' : ''
+            }</td></tr>
+        </table>
+      </td>
+
+      <!-- Column 6: Employer Part -->
+      <td style="border: 1px solid #000000">
+        <table>
+  <tr><td colspan="2" >Payment Mode</td>
+  </tr>
+  ${expenseKeys.map((k) => `<tr><td>${k}</td></tr>`).join('')}
+
+          <tr><td colspan="2" style="text-align:right;font-weight:bold">Net Payable</td></tr>
+        </table>
+      </td>
+    </tr>
+  `;
+}
+
 function buildTableRows(rows) {
   return rows
     .map((row, index) => {
-      const earnings = JSON.parse(row.earning_details);
-      const deductions = JSON.parse(row.deduction_details);
+      const earnings = JSON.parse(row.earning_details || '[]');
+      const deductions = JSON.parse(row.deduction_details || '[]');
+      const inputs = JSON.parse(row.input_details || '[]');
+      const fixedInputs = JSON.parse(row.fixed_input_details || '[]');
+      const expense_details = JSON.parse(row.expense_details || '[]'); // ✅ per row
+      // Extract keys exactly like buildHeader
+      const earningKeys = earnings.map((e) => e.title);
+      const deductionKeys = deductions.map((d) => d.title);
+      const inputKeys = inputs.map((i) => i.title);
+      const rateKeys = fixedInputs.map((i) => i.title || '[]');
+      const expenseKeys = expense_details.map((e) => e.title); // ✅ fixed
+      console.log(expenseKeys, 'expenseKeys');
+      const exclude = [
+        'factory_name',
+        'month',
+        'company_id',
+        'corporate_name',
+        'factory_id',
+        'gross_salary_structure',
+        'net_payable',
+        'input_details',
+        'esic_challan_details',
+        'expense_details',
+        'pf_esic_details',
+        'earning_details',
+        'deduction_details',
+        'fixed_input_details',
+        'month_details',
+        'pf_challan_details',
+        'salary',
+      ];
+
+      const employeeKeys = Object.keys(row).filter(
+        (key) =>
+          typeof row[key] !== 'object' &&
+          row[key] !== null &&
+          !exclude.includes(key)
+      );
+      employeeKeys.unshift('S.no.');
+
+      // maximum rows needed (same as header)
+      const maxLen = Math.max(
+        Math.ceil(employeeKeys.length / 2),
+        Math.ceil(inputKeys.length / 2)
+      );
+
+      let empTableRows = '';
+      for (let i = 0; i < maxLen; i++) {
+        const empCols = employeeKeys.slice(i * 2, i * 2 + 2);
+        const inCols = inputKeys.slice(i * 2, i * 2 + 2);
+
+        let left =
+          empCols.length === 1
+            ? `<td colspan="2">${
+                empCols[0] === 'S.no.' ? index + 1 : row[empCols[0]] || '-'
+              }</td>`
+            : empCols
+                .map((c) =>
+                  c === 'S.no.'
+                    ? `<td>${index + 1}</td>`
+                    : `<td>${row[c] || '-'}</td>`
+                )
+                .join('');
+
+        let right =
+          inCols.length === 1
+            ? `<td colspan="2">${
+                inputs.find((i) => i.title === inCols[0])?.answer || '-'
+              }</td>`
+            : inCols
+                .map(
+                  (c) =>
+                    `<td>${
+                      inputs.find((i) => i.title === c)?.answer || '-'
+                    }</td>`
+                )
+                .join('');
+
+        empTableRows += `<tr>${left}${right}</tr>`;
+      }
 
       return `
-      <tr>
-        <!-- Column 1: Employee info -->
-        <td style="border: 1px solid #000000">
-          <table>
-            <tr>
-              <td>${index + 1}.</td>
-              <td>${row.employee_name}</td>
-              <td>0.0</td>
-              <td>30.0</td>
-            </tr>
-            <tr>
-              <td>${row.factory_employee_id}</td>
-              <td>${row.father_name}</td>
-              <td>OTH</td>
-              <td>WO</td>
-            </tr>
-            <tr>
-              <td>${row.joining_date || '-'}</td>
-              <td>${row.location || '-'}</td>
-              <td>${row.gender?.charAt(0) || '-'}</td>
-              <td>PR</td>
-            </tr>
-            <tr>
-              <td>${row.department || '-'}</td>
-              <td>${row.uan || '-'}</td>
-              <td>${row.aadhar}</td>
-              <td>AB</td>
-            </tr>
-            <tr>
-              <td>-</td>
-              <td>${row.corporate_employee_id}</td>
-              <td>${row.esic_number || '-'}</td>
-              <td>LV</td>
-            </tr>
-            <tr>
-              <td colspan="4">${row.designation || '-'}</td>
-            </tr>
-          </table>
-        </td>
+        <tr>
+          <!-- Column 1: Employee Info -->
+          <td style="border: 1px solid #000000">
+            <table>${empTableRows}</table>
+          </td>
 
-        <!-- Column 2: Rate -->
-        <td style="border: 1px solid #000000">
-          <table>
-            <tr><td>${
-              earnings.find((e) => e.title === 'BASIC')?.answer || 0
-            }</td></tr>
-            <tr><td>${
-              earnings.find((e) => e.title === 'HRA')?.answer || 0
-            }</td></tr>
-            <tr><td>${
-              earnings.find((e) => e.title === 'SPECIAL ALLOWANCE')?.answer || 0
-            }</td></tr>
-            <tr><td>-</td></tr>
-            <tr><td style="text-align:right;font-weight:bold">${
-              row.gross_salary_structure
-            }</td></tr>
-          </table>
-        </td>
+          <!-- Column 2: Rate -->
+          <td style="border: 1px solid #000000">
+            <table>
+              ${rateKeys
+                .map(
+                  (k) =>
+                    `<tr><td>${
+                      fixedInputs.find((f) => f.title === k)?.answer || '-'
+                    }</td></tr>`
+                )
+                .join('')}
+              <tr><td style="text-align:right;font-weight:bold">${
+                row.gross_salary_structure
+              }</td></tr>
+            </table>
+          </td>
 
-        <!-- Column 3: Payable -->
-        <td style="border: 1px solid #000000">
-          <table>
-            <tr><td>${
-              earnings.find((e) => e.title === 'BASIC')?.answer || 0
-            }</td><td style="text-align:right">Arrear</td></tr>
-            <tr><td>${
-              earnings.find((e) => e.title === 'HRA')?.answer || 0
-            }</td><td style="text-align:right">Overtime</td></tr>
-            <tr><td>${
-              earnings.find((e) => e.title === 'SPECIAL ALLOWANCE')?.answer || 0
-            }</td></tr>
-            <tr><td>-</td></tr>
-            <tr><td colspan="2" style="text-align:right;font-weight:bold">${
-              row.net_payable
-            }</td></tr>
-          </table>
-        </td>
+          <!-- Column 3: Payable -->
+          <td style="border: 1px solid #000000">
+  <table>
+    ${(() => {
+      let html = '';
+      for (let i = 0; i < earningKeys.length; i += 2) {
+        const k1 = earningKeys[i];
+        const k2 = earningKeys[i + 1];
 
-        <!-- Column 4: Deduction -->
-        <td style="border: 1px solid #000000">
-          <table>
-            <tr><td>Canteen</td><td style="text-align:right">${
-              deductions.find((d) => d.title === 'PF')?.answer || 0
-            }</td></tr>
-            <tr><td colspan="2" align="right">${
-              deductions.find((d) => d.title === 'ESIC')?.answer || 0
-            }</td></tr>
-            <tr><td colspan="2" align="right">${
-              deductions.find((d) => d.title === 'Professional Tax')?.answer ||
-              0
-            }</td></tr>
-            <tr><td colspan="2" style="text-align:right;font-weight:bold">${
-              row.expense_details
-                ? JSON.parse(row.expense_details)
-                    .reduce((sum, e) => sum + parseFloat(e.amount), 0)
-                    .toFixed(2)
-                : 0
-            }</td></tr>
-          </table>
-        </td>
+        const v1 = earnings.find((e) => e.title === k1)?.answer || 0;
+        const v2 = k2 ? earnings.find((e) => e.title === k2)?.answer || 0 : '';
 
-        <!-- Column 5: Wages -->
-        <td style="border: 1px solid #000000">
-          <table>
-            <tr><td align="right">${
-              row.pf_esic_details ? JSON.parse(row.pf_esic_details).PF : 0
-            }</td></tr>
-            <tr><td align="right">${
-              row.pf_esic_details ? JSON.parse(row.pf_esic_details).ESIC : 0
-            }</td></tr>
-            <tr><td align="right">${row.net_payable}</td></tr>
-            <tr><td align="right">${row.gross_salary_structure}</td></tr>
-          </table>
-        </td>
+        html += `<tr>
+                   <td>${v1}</td>
+                   <td>${v2}</td>
+                 </tr>`;
+      }
+      return html;
+    })()}
+    <tr>
+      <td colspan="2" style="text-align:right;font-weight:bold">
+        ${row.net_payable}
+      </td>
+    </tr>
+  </table>
+</td>
 
-        <!-- Column 6: Employer Part -->
-        <td style="border: 1px solid #000000">
-          <table>
-            <tr><td>Cash</td></tr>
-            <tr><td>-</td><td align="right">-</td></tr>
-            <tr><td>-</td><td align="right">-</td></tr>
-            <tr><td>-</td><td align="right">-</td></tr>
-            <tr><td colspan="2" style="text-align:right;font-weight:bold">${
-              row.net_payable
-            }</td></tr>
-          </table>
-        </td>
-      </tr>
-    `;
+          <!-- Column 4: Deduction -->
+          <td style="border: 1px solid #000000">
+            <table>
+              ${deductionKeys
+                .map(
+                  (k) =>
+                    `<tr><td colspan="2" align="right">${
+                      deductions.find((d) => d.title === k)?.answer || 0
+                    }</td></tr>`
+                )
+                .join('')}
+              <tr><td colspan="2" style="text-align:right;font-weight:bold">${
+                row.expense_details
+                  ? JSON.parse(row.expense_details)
+                      .reduce((sum, e) => sum + parseFloat(e.amount), 0)
+                      .toFixed(2)
+                  : 0
+              }</td></tr>
+            </table>
+          </td>
+
+          <!-- Column 5: Wages -->
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr><td align="right">${
+                row.pf_esic_details ? JSON.parse(row.pf_esic_details).PF : 0
+              }</td></tr>
+              <tr><td align="right">${
+                row.pf_esic_details ? JSON.parse(row.pf_esic_details).ESIC : 0
+              }</td></tr>
+            </table>
+          </td>
+
+          <!-- Column 6: Employer Part -->
+          <td style="border: 1px solid #000000">
+            <table>
+              <tr><td> BT-${row.accountno || 'Cash'}</td></tr>
+              ${expenseKeys
+                .map(
+                  (k) =>
+                    `<tr><td>${
+                      expense_details.find((e) => e.title === k)?.amount || 0
+                    }</td></tr>`
+                )
+                .join('')}
+
+              <tr><td colspan="2" style="text-align:right;font-weight:bold">${
+                row.net_payable
+              }</td></tr>
+            </table>
+          </td>
+        </tr>
+      `;
     })
     .join('');
 }
 
 function buildHtml(rows) {
+  const headerRow = buildHeader(rows);
   const tableRows = buildTableRows(rows);
 
   return `
@@ -314,163 +509,8 @@ function buildHtml(rows) {
             </tr>
           </thead>
           <tbody>
-              <tr>
-          <td style="border: 1px solid #000000">
-            <table>
-              <tr>
-                <td>S.No.</td>
-                <td>Employee Name</td>
-                <td>Arr Day</td>
-                <td>PD</td>
-              </tr>
-              <tr>
-                <td>Peer No.</td>
-                <td>Father Name</td>
-                <td>OTH</td>
-                <td>WO</td>
-              </tr>
-              <tr>
-                <td>DOJ</td>
-                <td>Location</td>
-                <td>M/F</td>
-                <td>PR</td>
-              </tr>
-              <tr>
-                <td>Department</td>
-                <td>UAN</td>
-                <td>AADHAR</td>
-                <td>AB</td>
-              </tr>
-              <tr>
-                <td>EPF NO.</td>
-                <td>EMP.NO</td>
-                <td>ESI NO.</td>
-                <td>LV</td>
-              </tr>
-              <tr>
-                <td colspan="4">Designation</td>
-              </tr>
-            </table>
-          </td>
-
-          <td style="border: 1px solid #000000">
-            <table>
-              <tr>
-                <td>Basic</td>
-              </tr>
-              <tr>
-                <td>HRA</td>
-              </tr>
-              <tr>
-                <td>Other</td>
-              </tr>
-              <tr>
-                <td>Att Once</td>
-              </tr>
-              <tr>
-                <td style="text-align: right; font-weight: bold">Gross</td>
-              </tr>
-            </table>
-          </td>
-
-          <td style="border: 1px solid #000000">
-            <table>
-              <tr>
-                <td>Basic</td>
-                <td style="text-align: right">Arrear</td>
-              </tr>
-              <tr>
-                <td>HRA</td>
-                <td style="text-align: right">Overtime</td>
-              </tr>
-              <tr>
-                <td>Other</td>
-              </tr>
-              <tr>
-                <td>Att Once</td>
-              </tr>
-              <tr>
-                <td colspan="2" style="text-align: right; font-weight: bold">
-                  Payable
-                </td>
-              </tr>
-            </table>
-          </td>
-
-          <td style="border: 1px solid #000000">
-            <table>
-              <tr>
-                <td>Canteen</td>
-                <td style="text-align: right">PF</td>
-              </tr>
-              <tr>
-                <td colspan="2" align="right">ESI</td>
-              </tr>
-              <tr>
-                <td colspan="2" align="right">LWF</td>
-              </tr>
-              <tr>
-                <td
-                  colspan="2"
-                  style="
-                    text-align: right;
-                    font-weight: bold;
-                    padding-top: 11px;
-                  ">
-                  Deduction
-                </td>
-              </tr>
-            </table>
-          </td>
-
-          <td style="border: 1px solid #000000">
-            <table>
-              <tr>
-                <td align="right">PF</td>
-              </tr>
-              <tr>
-                <td align="right">Pension</td>
-              </tr>
-              <tr>
-                <td align="right">ESI</td>
-              </tr>
-              <tr>
-                <td align="right">LWF</td>
-              </tr>
-            </table>
-          </td>
-
-          <td style="border: 1px solid #000000">
-            <table>
-              <tr>
-                <td>Payment Mode</td>
-              </tr>
-              <tr>
-                <td>Pension</td>
-                <td align="right">EPF</td>
-              </tr>
-              <tr>
-                <td>ER-ESI</td>
-                <td align="right">Fine</td>
-              </tr>
-              <tr>
-                <td>ER-LWF</td>
-                <td align="right">Damage</td>
-              </tr>
-              <tr>
-                <td
-                  colspan="2"
-                  style="
-                    text-align: right;
-                    font-weight: bold;
-                    padding-top: 14px;
-                  ">
-                  Net Payable
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+              
+         ${headerRow}
             ${tableRows}
           </tbody>
         </table>
@@ -482,7 +522,7 @@ function buildHtml(rows) {
 const generateDynamicPdf = async (rows, outputPath) => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-
+  // console.log(rows, 'checking rows');
   const html = buildHtml(rows);
 
   // const html = await ejs.renderFile(path.join(__dirname, 'template.ejs'), {
@@ -499,7 +539,7 @@ const generateDynamicPdf = async (rows, outputPath) => {
     path: outputPath,
     format: 'A4',
     landscape: true,
-    printBackground: true,
+    printBackground: false,
   });
 
   await browser.close();
@@ -508,13 +548,14 @@ const generateDynamicPdf = async (rows, outputPath) => {
 
 const getCorporateDataByParams = async (req, res) => {
   try {
-    const { COMPANY_ID, FACTORY_ID, MONTH } = req.query;
+    const { COMPANY_ID, FACTORY_ID, MONTH, STRUCTURE_ID } = req.query;
 
     // ✅ Validate required params
-    if (!COMPANY_ID || !FACTORY_ID || !MONTH) {
+    if (!COMPANY_ID || !FACTORY_ID || !MONTH || !STRUCTURE_ID) {
       return res.status(400).json({
         success: false,
-        message: 'COMPANY_ID, FACTORY_ID, and MONTH are required.',
+        message:
+          'COMPANY_ID, FACTORY_ID, MONTH, and STRUCTURE_ID are required.',
       });
     }
 
@@ -525,8 +566,9 @@ const getCorporateDataByParams = async (req, res) => {
           T2.FACTORY_ID AS factory_id,
           T2.FACTORY_NAME AS factory_name,
           T3.MONTH AS month,
-          T4.FACTORY_EMPLOYEE_ID AS factory_employee_id,
-          T4.CORPORATE_EMPLOYEE_ID AS corporate_employee_id,
+          T3.INPUT_DETAILS AS input_details,
+          T4.FACTORY_EMPLOYEE_ID AS factory_employee_code,
+          T4.CORPORATE_EMPLOYEE_ID AS corporate_employee_code,
           T4.NAME AS employee_name,
           T4.FATHER_NAME AS father_name,
           T4.JOINING_DATE AS joining_date,
@@ -534,10 +576,10 @@ const getCorporateDataByParams = async (req, res) => {
           T4.ESIC_NUMBER AS esic_number,
           T4.AADHAR AS aadhar,
           T4.SALARY AS salary,
-          JSON_UNQUOTE(JSON_EXTRACT(T4.ADDITIONAL_DETAILS, '$.department')) AS department,
-          JSON_UNQUOTE(JSON_EXTRACT(T4.ADDITIONAL_DETAILS, '$.designation')) AS designation,
-          JSON_UNQUOTE(JSON_EXTRACT(T4.ADDITIONAL_DETAILS, '$.location')) AS location,
+          T4.BANK_ACCOUNT_NO AS accountno,
           T4.GENDER AS gender,
+          T4.EMPLOYEE_TYPE AS department,
+          T4.EMPLOYEE_SUBTYPE AS designation, 
           T3.GROSS_SALARY AS gross_salary_structure,
           T3.NET_PAYABLE AS net_payable,
           T3.MONTH_DETAILS AS month_details,
@@ -559,6 +601,7 @@ const getCorporateDataByParams = async (req, res) => {
       WHERE T1.COMPANY_ID = ?
         AND T2.FACTORY_ID = ?
         AND T3.MONTH = ?
+        AND T3.STRUCTURE_ID = ?
       LIMIT 10;   -- 🔹 adjust limit for safety
     `;
 
@@ -566,6 +609,7 @@ const getCorporateDataByParams = async (req, res) => {
       COMPANY_ID,
       FACTORY_ID,
       MONTH,
+      STRUCTURE_ID,
     ]);
 
     if (rows.length === 0) {
