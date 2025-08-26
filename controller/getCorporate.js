@@ -180,6 +180,9 @@ function buildHeader(rows) {
     'month_details',
     'pf_challan_details',
     'salary',
+    'address',
+    'district',
+    'state',
   ];
 
   // Filter keys
@@ -206,16 +209,21 @@ function buildHeader(rows) {
     let left =
       empCols.length === 1
         ? `<td colspan="2">${empCols[0]}</td>`
-        : empCols.map((c) => `<td>${c}</td>`).join('');
+        : empCols.map((c) => `<td align="left">${c}</td>`).join('');
+
+    // console.log(left, 'left data');
 
     let right =
       inCols.length === 1
         ? `<td colspan="2">${inCols[0]}</td>`
-        : inCols.map((c) => `<td>${c}</td>`).join('');
+        : inCols.map((c) => `<td align="right">${c}</td>`).join('');
 
     tableRows += `<tr>${left}${right}</tr>`;
+
+    // console.log(right, 'right data');
   }
 
+  // console.log(tableRows, 'tableRows data');
   return `
     <tr>
       <!-- Column 1: Employee Info -->
@@ -244,7 +252,7 @@ function buildHeader(rows) {
 
         html += `<tr>
                    <td>${k1 || ''}</td>
-                   <td>${k2 || ''}</td>
+                   <td align="right">${k2 || ''}</td>
                  </tr>`;
       }
       return html;
@@ -302,7 +310,7 @@ function buildTableRows(rows) {
       const inputKeys = inputs.map((i) => i.title);
       const rateKeys = fixedInputs.map((i) => i.title || '[]');
       const expenseKeys = expense_details.map((e) => e.title); // ✅ fixed
-      console.log(expenseKeys, 'expenseKeys');
+      // console.log(expenseKeys, 'expenseKeys');
       const exclude = [
         'factory_name',
         'month',
@@ -321,6 +329,9 @@ function buildTableRows(rows) {
         'month_details',
         'pf_challan_details',
         'salary',
+        'address',
+        'district',
+        'state',
       ];
 
       const employeeKeys = Object.keys(row).filter(
@@ -351,7 +362,7 @@ function buildTableRows(rows) {
                 .map((c) =>
                   c === 'S.no.'
                     ? `<td>${index + 1}</td>`
-                    : `<td>${row[c] || '-'}</td>`
+                    : `<td align="left" width="100">${row[c] || '-'}</td>`
                 )
                 .join('');
 
@@ -363,7 +374,7 @@ function buildTableRows(rows) {
             : inCols
                 .map(
                   (c) =>
-                    `<td>${
+                    `<td align="right" width="130">${
                       inputs.find((i) => i.title === c)?.answer || '-'
                     }</td>`
                 )
@@ -371,6 +382,8 @@ function buildTableRows(rows) {
 
         empTableRows += `<tr>${left}${right}</tr>`;
       }
+
+      // console.log(empTableRows, 'empTableRows data');
 
       return `
         <tr>
@@ -410,7 +423,7 @@ function buildTableRows(rows) {
 
         html += `<tr>
                    <td>${v1}</td>
-                   <td>${v2}</td>
+                   <td align="right">${v2}</td>
                  </tr>`;
       }
       return html;
@@ -492,13 +505,43 @@ function buildHtml(rows) {
         <title>Wages Count</title>
         <style>
           table { border-collapse: collapse; width: 100%; }
-          th, td { font-size: 10px; color: #000; }
-          th { border: 1px solid #000; text-align: center; font-weight: 500; }
+          th, td { font-size: 8px; color: #000; }
+         td {
+    page-break-inside: avoid; 
+    break-inside: avoid;     
+    vertical-align: top;
+  }
+  td > table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
         </style>
       </head>
       <body>
+     <table style="width: 100%; border-collapse: collapse;">
+  <tr>
+    <td colspan="2" style="text-align: left; font-weight: bold;">
+      ${rows[0].corporate_name}
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" style="text-align: left;">
+      ${rows[0].address}, ${rows[0].district}, ${rows[0].state}
+    </td>
+  </tr>
+  <tr>
+    <td style="text-align: left; width: 50%;">
+     SITE - ${rows[0].factory_name}
+    </td>
+    <td style="text-align: right; font-weight: bold; width: 50%;">
+      ${rows[0].month}
+    </td>
+  </tr>
+</table>
         <table border="1">
-          <thead>
+          <thead>  
+          </thead>
+          <tbody>
             <tr>
               <th>Month Day</th>
               <th>Rate</th>
@@ -506,10 +549,7 @@ function buildHtml(rows) {
               <th>Deduction</th>
               <th>Wages</th>
               <th>Employer Part</th>
-            </tr>
-          </thead>
-          <tbody>
-              
+            </tr>  
          ${headerRow}
             ${tableRows}
           </tbody>
@@ -540,6 +580,23 @@ const generateDynamicPdf = async (rows, outputPath) => {
     format: 'A4',
     landscape: true,
     printBackground: false,
+    // displayHeaderFooter: true,
+    // headerTemplate: `
+    //   <div style="font-size:10px; width:100%; text-align:center;">
+    //     <span class="title">HANS Enterprises  </span>
+    //   </div>
+    // `,
+    // footerTemplate: `
+    //   <div style="font-size:10px; width:100%; text-align:center;">
+    //     Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+    //   </div>
+    // `,
+    margin: {
+      top: '20px',
+      bottom: '30px',
+      right: '20px',
+      left: '20px',
+    },
   });
 
   await browser.close();
@@ -563,6 +620,9 @@ const getCorporateDataByParams = async (req, res) => {
       SELECT
           T1.COMPANY_ID AS company_id,
           T1.NAME AS corporate_name,
+           T1.ADDRESS AS address,
+          T1.DISTRICT AS district,
+          T1.STATE AS state,
           T2.FACTORY_ID AS factory_id,
           T2.FACTORY_NAME AS factory_name,
           T3.MONTH AS month,
@@ -602,7 +662,6 @@ const getCorporateDataByParams = async (req, res) => {
         AND T2.FACTORY_ID = ?
         AND T3.MONTH = ?
         AND T3.STRUCTURE_ID = ?
-      LIMIT 10;   -- 🔹 adjust limit for safety
     `;
 
     const [rows] = await pool.execute(sqlQuery, [
