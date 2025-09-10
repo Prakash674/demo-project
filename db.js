@@ -17,7 +17,7 @@ const mongoClient = new MongoClient(uri, {
 async function connectMongo() {
   if (!mongoClient.topology?.isConnected()) {
     await mongoClient.connect();
-    console.log('✅ Connected to MongoDB successfully!');
+    console.log(' Connected to MongoDB successfully!');
   }
   return mongoClient.db('arthum'); // return DB instance
 }
@@ -37,12 +37,12 @@ const pool = mysql.createPool({
 (async () => {
   try {
     const conn = await pool.getConnection();
-    console.log('✅ Connected to MySQL successfully!');
+    console.log('Connected to MySQL successfully!');
     conn.release();
 
     await connectMongo(); // just test Mongo connection
   } catch (error) {
-    console.error('❌ Database connection failed:', error);
+    console.error('Database connection failed:', error);
   }
 })();
 

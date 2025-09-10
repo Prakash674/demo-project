@@ -564,111 +564,7 @@ const getCorporateDataByParams = async (req, res) => {
   }
 };
 
-//mongodb
-// controllers/report.controller.js
-
-// const getSalaryReport = async (req, res) => {
-//   const { COMPANY_ID, FACTORY_ID, MONTH, STRUCTURE_ID } = req.query;
-
-//   if (!COMPANY_ID || !FACTORY_ID || !MONTH || !STRUCTURE_ID) {
-//     throw new Error('COMPANY_ID, FACTORY_ID, MONTH, STRUCTURE_ID are required');
-//   }
-
-//   const db = await connectMongo();
-
-//   // const pipeline = [
-//   //   {
-//   //     $match: { COMPANY_ID: COMPANY_ID }, // UUID string
-//   //   },
-//   //   {
-//   //     $lookup: {
-//   //       from: 'corporate_hrms_factory',
-//   //       localField: 'COMPANY_ID',
-//   //       foreignField: 'COMPANY_ID',
-//   //       as: 'factory',
-//   //     },
-//   //   },
-//   //   { $unwind: '$factory' },
-//   //   {
-//   //     $lookup: {
-//   //       from: 'corporate_hrms_salary_data',
-//   //       let: { compId: '$COMPANY_ID' },
-//   //       pipeline: [
-//   //         {
-//   //           $match: {
-//   //             $expr: {
-//   //               $and: [
-//   //                 { $eq: ['$COMPANY_ID', '$$compId'] },
-//   //                 { $eq: ['$TAG_ID', FACTORY_ID] },
-//   //                 { $eq: ['$MONTH', MONTH] },
-//   //                 { $eq: ['$STRUCTURE_ID', STRUCTURE_ID] },
-//   //               ],
-//   //             },
-//   //           },
-//   //         },
-//   //       ],
-//   //       as: 'salary',
-//   //     },
-//   //   },
-//   //   { $unwind: '$salary' },
-//   //   {
-//   //     $lookup: {
-//   //       from: 'corporate_hrms_employee_master',
-//   //       localField: 'salary.EMPLOYEE_ID',
-//   //       foreignField: 'EMPLOYEE_ID',
-//   //       as: 'employee',
-//   //     },
-//   //   },
-//   //   { $unwind: '$employee' },
-//   //   {
-//   //     $project: {
-//   //       company_id: '$COMPANY_ID',
-//   //       corporate_name: '$NAME',
-//   //       address: '$ADDRESS',
-//   //       district: '$DISTRICT',
-//   //       state: '$STATE',
-//   //       factory_id: '$factory.FACTORY_ID',
-//   //       factory_name: '$factory.FACTORY_NAME',
-//   //       month: '$salary.MONTH',
-//   //       input_details: '$salary.INPUT_DETAILS',
-//   //       factory_employee_code: '$employee.FACTORY_EMPLOYEE_ID',
-//   //       corporate_employee_code: '$employee.CORPORATE_EMPLOYEE_ID',
-//   //       employee_name: '$employee.NAME',
-//   //       father_name: '$employee.FATHER_NAME',
-//   //       joining_date: '$employee.JOINING_DATE',
-//   //       uan: '$employee.UAN',
-//   //       esic_number: '$employee.ESIC_NUMBER',
-//   //       aadhar: '$employee.AADHAR',
-//   //       salary: '$employee.SALARY',
-//   //       accountno: '$employee.BANK_ACCOUNT_NO',
-//   //       gender: '$employee.GENDER',
-//   //       department: '$employee.EMPLOYEE_TYPE',
-//   //       designation: '$employee.EMPLOYEE_SUBTYPE',
-//   //       gross_salary_structure: '$salary.GROSS_SALARY',
-//   //       net_payable: '$salary.NET_PAYABLE',
-//   //       month_details: '$salary.MONTH_DETAILS',
-//   //       fixed_input_details: '$salary.FIXED_INPUT_DETAILS',
-//   //       earning_details: '$salary.EARNING_DETAILS',
-//   //       deduction_details: '$salary.DEDUCTION_DETAILS',
-//   //       pf_esic_details: '$salary.PF_ESIC',
-//   //       pf_challan_details: '$salary.PF_CHALLAN_DETAILS',
-//   //       esic_challan_details: '$salary.ESIC_CHALLAN_DETAILS',
-//   //       expense_details: '$salary.EXPENSE_DETAILS',
-//   //     },
-//   //   },
-//   // ];
-
-//   const data = await db
-//     .collection('corporate_hrms_company_master')
-//     .aggregate(pipeline)
-//     .toArray();
-
-//   res.json({
-//     success: true,
-//     message: 'Salary report fetched successfully',
-//     data: data,
-//   });
-// };
+//getting salary report and generating pdf from mongodb instance 
 
 const getSalaryReport = async (req, res) => {
   try {
@@ -792,7 +688,7 @@ const getSalaryReport = async (req, res) => {
       filePath: `/reports/${fileName}`,
     });
   } catch (err) {
-    console.error('❌ Error in getSalaryReport:', err);
+    console.error('Error in getSalaryReport:', err);
     return res.status(500).json({
       success: false,
       message: 'Server error',
