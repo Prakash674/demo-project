@@ -2,16 +2,24 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const pool = require('../db');
-
-//Build Headers for table data  
+const { connectMongo } = require('../db');
+//Build Headers for table data
 function buildHeader(rows) {
   if (!rows.length) return '';
 
-  const earnings = JSON.parse(rows[0].earning_details || '[]');
-  const deductions = JSON.parse(rows[0].deduction_details || '[]');
-  const inputs = JSON.parse(rows[0].input_details || '[]');
-  const fixed_input_details = JSON.parse(rows[0].fixed_input_details || '[]');
-  const expense_details = JSON.parse(rows[0].expense_details || '[]');
+  // console.log(rows[0], 'first row data');
+  // return;
+  // const earnings = JSON.parse(rows[0].earning_details || '[]');
+  // const deductions = JSON.parse(rows[0].deduction_details || '[]');
+  // const inputs = JSON.parse(rows[0].input_details || '[]');
+  // const fixed_input_details = JSON.parse(rows[0].fixed_input_details || '[]');
+  // const expense_details = JSON.parse(rows[0].expense_details || '[]');
+
+  const earnings = rows[0].earning_details || [];
+  const deductions = rows[0].deduction_details || [];
+  const inputs = rows[0].input_details || [];
+  const fixed_input_details = rows[0].fixed_input_details || [];
+  const expense_details = rows[0].expense_details || [];
 
   // Extract keys
   const earningKeys = earnings.map((e) => e.title);
@@ -154,15 +162,22 @@ function buildHeader(rows) {
   `;
 }
 
-//build dynamic table data 
+//build dynamic table data
 function buildTableRows(rows) {
   return rows
     .map((row, index) => {
-      const earnings = JSON.parse(row.earning_details || '[]');
-      const deductions = JSON.parse(row.deduction_details || '[]');
-      const inputs = JSON.parse(row.input_details || '[]');
-      const fixedInputs = JSON.parse(row.fixed_input_details || '[]');
-      const expense_details = JSON.parse(row.expense_details || '[]');
+      // const earnings = JSON.parse(row.earning_details || '[]');
+      // const deductions = JSON.parse(row.deduction_details || '[]');
+      // const inputs = JSON.parse(row.input_details || '[]');
+      // const fixedInputs = JSON.parse(row.fixed_input_details || '[]');
+      // const expense_details = JSON.parse(row.expense_details || '[]');
+
+      const earnings = row.earning_details || [];
+      const deductions = row.deduction_details || [];
+      const inputs = row.input_details || [];
+      const fixedInputs = row.fixed_input_details || [];
+      const expense_details = row.expense_details || [];
+
       // Extract keys exactly like buildHeader
       const earningKeys = earnings.map((e) => e.title);
       const deductionKeys = deductions.map((d) => d.title);
@@ -241,8 +256,6 @@ function buildTableRows(rows) {
         empTableRows += `<tr>${left}${right}</tr>`;
       }
 
-     
-
       return `
         <tr>
           <!-- Column 1: Employee Info -->
@@ -306,8 +319,13 @@ function buildTableRows(rows) {
                 )
                 .join('')}
               <tr><td colspan="2" style="text-align:right;font-weight:bold">${
+                // row.expense_details
+                //   ? JSON.parse(row.expense_details)
+                //       .reduce((sum, e) => sum + parseFloat(e.amount), 0)
+                //       .toFixed(2)
+                //   : 0
                 row.expense_details
-                  ? JSON.parse(row.expense_details)
+                  ? row.expense_details
                       .reduce((sum, e) => sum + parseFloat(e.amount), 0)
                       .toFixed(2)
                   : 0
@@ -319,10 +337,12 @@ function buildTableRows(rows) {
           <td style="border: 1px solid #000000">
             <table>
               <tr><td align="right">${
-                row.pf_esic_details ? JSON.parse(row.pf_esic_details).PF : 0
+                // row.pf_esic_details ? JSON.parse(row.pf_esic_details).PF : 0
+                row.pf_esic_details ? row.pf_esic_details.PF : 0
               }</td></tr>
               <tr><td align="right">${
-                row.pf_esic_details ? JSON.parse(row.pf_esic_details).ESIC : 0
+                // row.pf_esic_details ? JSON.parse(row.pf_esic_details).ESIC : 0
+                row.pf_esic_details ? row.pf_esic_details.ESIC : 0
               }</td></tr>
             </table>
           </td>
@@ -544,6 +564,244 @@ const getCorporateDataByParams = async (req, res) => {
   }
 };
 
+//mongodb
+// controllers/report.controller.js
+
+// const getSalaryReport = async (req, res) => {
+//   const { COMPANY_ID, FACTORY_ID, MONTH, STRUCTURE_ID } = req.query;
+
+//   if (!COMPANY_ID || !FACTORY_ID || !MONTH || !STRUCTURE_ID) {
+//     throw new Error('COMPANY_ID, FACTORY_ID, MONTH, STRUCTURE_ID are required');
+//   }
+
+//   const db = await connectMongo();
+
+//   // const pipeline = [
+//   //   {
+//   //     $match: { COMPANY_ID: COMPANY_ID }, // UUID string
+//   //   },
+//   //   {
+//   //     $lookup: {
+//   //       from: 'corporate_hrms_factory',
+//   //       localField: 'COMPANY_ID',
+//   //       foreignField: 'COMPANY_ID',
+//   //       as: 'factory',
+//   //     },
+//   //   },
+//   //   { $unwind: '$factory' },
+//   //   {
+//   //     $lookup: {
+//   //       from: 'corporate_hrms_salary_data',
+//   //       let: { compId: '$COMPANY_ID' },
+//   //       pipeline: [
+//   //         {
+//   //           $match: {
+//   //             $expr: {
+//   //               $and: [
+//   //                 { $eq: ['$COMPANY_ID', '$$compId'] },
+//   //                 { $eq: ['$TAG_ID', FACTORY_ID] },
+//   //                 { $eq: ['$MONTH', MONTH] },
+//   //                 { $eq: ['$STRUCTURE_ID', STRUCTURE_ID] },
+//   //               ],
+//   //             },
+//   //           },
+//   //         },
+//   //       ],
+//   //       as: 'salary',
+//   //     },
+//   //   },
+//   //   { $unwind: '$salary' },
+//   //   {
+//   //     $lookup: {
+//   //       from: 'corporate_hrms_employee_master',
+//   //       localField: 'salary.EMPLOYEE_ID',
+//   //       foreignField: 'EMPLOYEE_ID',
+//   //       as: 'employee',
+//   //     },
+//   //   },
+//   //   { $unwind: '$employee' },
+//   //   {
+//   //     $project: {
+//   //       company_id: '$COMPANY_ID',
+//   //       corporate_name: '$NAME',
+//   //       address: '$ADDRESS',
+//   //       district: '$DISTRICT',
+//   //       state: '$STATE',
+//   //       factory_id: '$factory.FACTORY_ID',
+//   //       factory_name: '$factory.FACTORY_NAME',
+//   //       month: '$salary.MONTH',
+//   //       input_details: '$salary.INPUT_DETAILS',
+//   //       factory_employee_code: '$employee.FACTORY_EMPLOYEE_ID',
+//   //       corporate_employee_code: '$employee.CORPORATE_EMPLOYEE_ID',
+//   //       employee_name: '$employee.NAME',
+//   //       father_name: '$employee.FATHER_NAME',
+//   //       joining_date: '$employee.JOINING_DATE',
+//   //       uan: '$employee.UAN',
+//   //       esic_number: '$employee.ESIC_NUMBER',
+//   //       aadhar: '$employee.AADHAR',
+//   //       salary: '$employee.SALARY',
+//   //       accountno: '$employee.BANK_ACCOUNT_NO',
+//   //       gender: '$employee.GENDER',
+//   //       department: '$employee.EMPLOYEE_TYPE',
+//   //       designation: '$employee.EMPLOYEE_SUBTYPE',
+//   //       gross_salary_structure: '$salary.GROSS_SALARY',
+//   //       net_payable: '$salary.NET_PAYABLE',
+//   //       month_details: '$salary.MONTH_DETAILS',
+//   //       fixed_input_details: '$salary.FIXED_INPUT_DETAILS',
+//   //       earning_details: '$salary.EARNING_DETAILS',
+//   //       deduction_details: '$salary.DEDUCTION_DETAILS',
+//   //       pf_esic_details: '$salary.PF_ESIC',
+//   //       pf_challan_details: '$salary.PF_CHALLAN_DETAILS',
+//   //       esic_challan_details: '$salary.ESIC_CHALLAN_DETAILS',
+//   //       expense_details: '$salary.EXPENSE_DETAILS',
+//   //     },
+//   //   },
+//   // ];
+
+//   const data = await db
+//     .collection('corporate_hrms_company_master')
+//     .aggregate(pipeline)
+//     .toArray();
+
+//   res.json({
+//     success: true,
+//     message: 'Salary report fetched successfully',
+//     data: data,
+//   });
+// };
+
+const getSalaryReport = async (req, res) => {
+  try {
+    const { COMPANY_ID, FACTORY_ID, MONTH } = req.query;
+
+    console.log('Request Query:', COMPANY_ID, FACTORY_ID, MONTH);
+
+    const STRUCTURE_ID = parseInt(req.query.STRUCTURE_ID, 10);
+    if (!COMPANY_ID || !FACTORY_ID || !MONTH || !STRUCTURE_ID) {
+      return res.status(400).json({
+        success: false,
+        message: 'COMPANY_ID, FACTORY_ID, MONTH, STRUCTURE_ID are required',
+      });
+    }
+
+    console.log(typeof STRUCTURE_ID);
+
+    const db = await connectMongo();
+    console.log('Connected to MongoDB', db.databaseName);
+
+    const pipeline = [
+      { $match: { COMPANY_ID } },
+      {
+        $lookup: {
+          from: 'corporate_hrms_factory',
+          localField: 'COMPANY_ID',
+          foreignField: 'COMPANY_ID',
+          as: 'factory',
+        },
+      },
+      { $unwind: '$factory' },
+      {
+        $lookup: {
+          from: 'corporate_hrms_salary_data',
+          // let: { compId: '$COMPANY_ID' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$COMPANY_ID', COMPANY_ID] },
+                    { $eq: ['$TAG_ID', FACTORY_ID] },
+                    { $eq: ['$MONTH', MONTH] },
+                    { $eq: ['$STRUCTURE_ID', STRUCTURE_ID] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: 'salary',
+        },
+      },
+      { $unwind: '$salary' },
+      {
+        $lookup: {
+          from: 'corporate_hrms_employee_master',
+          localField: 'salary.EMPLOYEE_ID',
+          foreignField: 'EMPLOYEE_ID',
+          as: 'employee',
+        },
+      },
+      { $unwind: '$employee' },
+      {
+        $project: {
+          company_id: '$COMPANY_ID',
+          corporate_name: '$NAME',
+          address: '$ADDRESS',
+          district: '$DISTRICT',
+          state: '$STATE',
+          factory_id: '$factory.FACTORY_ID',
+          factory_name: '$factory.FACTORY_NAME',
+          month: '$salary.MONTH',
+          input_details: '$salary.INPUT_DETAILS',
+          factory_employee_code: '$employee.FACTORY_EMPLOYEE_ID',
+          corporate_employee_code: '$employee.CORPORATE_EMPLOYEE_ID',
+          employee_name: '$employee.NAME',
+          father_name: '$employee.FATHER_NAME',
+          joining_date: '$employee.JOINING_DATE',
+          uan: '$employee.UAN',
+          esic_number: '$employee.ESIC_NUMBER',
+          aadhar: '$employee.AADHAR',
+          salary: '$employee.SALARY',
+          accountno: '$employee.BANK_ACCOUNT_NO',
+          gender: '$employee.GENDER',
+          department: '$employee.EMPLOYEE_TYPE',
+          designation: '$employee.EMPLOYEE_SUBTYPE',
+          gross_salary_structure: '$salary.GROSS_SALARY',
+          net_payable: '$salary.NET_PAYABLE',
+          month_details: '$salary.MONTH_DETAILS',
+          fixed_input_details: '$salary.FIXED_INPUT_DETAILS',
+          earning_details: '$salary.EARNING_DETAILS',
+          deduction_details: '$salary.DEDUCTION_DETAILS',
+          pf_esic_details: '$salary.PF_ESIC',
+          pf_challan_details: '$salary.PF_CHALLAN_DETAILS',
+          esic_challan_details: '$salary.ESIC_CHALLAN_DETAILS',
+          expense_details: '$salary.EXPENSE_DETAILS',
+        },
+      }
+    ];
+
+    const results = await db
+      .collection('corporate_hrms_company_master')
+      .aggregate(pipeline)
+      .toArray();
+
+    // return res.json({ success: true, data: results });
+
+    const reportsDir = path.join(__dirname, 'reports');
+    if (!fs.existsSync(reportsDir)) {
+      fs.mkdirSync(reportsDir);
+    }
+
+    // Generating unique file name based on date
+    const fileName = `corporate-report-${Date.now()}.pdf`;
+    const outputPath = path.join(reportsDir, fileName);
+
+    await generateDynamicPdf(results, outputPath);
+    return res.json({
+      success: true,
+      message: 'Corporate data PDF generated successfully',
+      filePath: `/reports/${fileName}`,
+    });
+  } catch (err) {
+    console.error('❌ Error in getSalaryReport:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   getCorporateDataByParams,
+  getSalaryReport,
 };
